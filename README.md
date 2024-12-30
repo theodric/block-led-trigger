@@ -3,7 +3,7 @@ Linux kernel module to blink LEDs on block device activity
 
 **Note from theodric 2024-12-30:**  
 ----------
-Very small modifications enable to handle NVMe MAJ:MIN device numbers.  
+Very small modifications made to handle NVMe MAJ:MIN device numbers.  
 Confirmed working on openSUSE Tumbleweed and [my spin of kernel 6.12.7](https://github.com/theodric/linux-amd-zen1-zen2-zen3-openSUSE_TW) running on a ThinkPad E14 gen2
 
 
