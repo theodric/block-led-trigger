@@ -1,6 +1,14 @@
 # block-led-trigger
 Linux kernel module to blink LEDs on block device activity
 
+**Note from theodric 2024-12-30:**  
+----------
+working on openSUSE Tumbleweed and [my spin of kernel 6.12.7](https://github.com/theodric/linux-amd-zen1-zen2-zen3-openSUSE_TW) running on a ThinkPad E14 gen2
+
+
+
+**Original notes from creator**
+-----------
 **Update**: Starting with version 4.8, Linux now has built-in support for
 blinking LEDs (through the `disk-activity` trigger). However Linux's built-in
 `disk-activity` trigger is not configurable, whereas this module enables the
