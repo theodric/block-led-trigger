@@ -6,6 +6,27 @@ Linux kernel module to blink LEDs on block device activity
 Very small modifications made to handle NVMe MAJ:MIN device numbers.  
 Confirmed working on openSUSE Tumbleweed and [my spin of kernel 6.12.7](https://github.com/theodric/linux-amd-zen1-zen2-zen3-openSUSE_TW) running on a ThinkPad E14 gen2
 
+Despite having CONFIG_RELOCATABLE=y, the module does not load through subsequent reboots of the same kernel.  
+I have not troubleshot this; I have simply bruteforced it in a way which should make it simply work on any subsequent kernel.
+
+Add and modify this unit file as required for your installation:
+
+/etc/systemd/system/block-led-trigger.service
+
+````
+[Unit]
+Description=Load block_led_trigger kernel module with custom devices parameter
+After=network.target
+
+[Service]
+ExecStart=/bin/sh -c 'cd /usr/src/block-led-trigger; make clean; make -j9; /sbin/insmod /usr/src/block-led-trigger/block_led_trigger.ko devices=259:0'
+ExecStartPost=/bin/sh -c 'echo 0 > /sys/class/leds/tpacpi::power/brightness; echo block-activity > /sys/class/leds/tpacpi::power/trigger'
+Type=oneshot
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+````
 
 
 **Original notes from creator**
