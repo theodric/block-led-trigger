@@ -5,6 +5,8 @@ After=network.target
 [Service]
 ExecStart=/bin/sh -c 'cd /usr/src/block-led-trigger; make clean; make -j9; /sbin/insmod /usr/src/block-led-trigger/block_led_trigger.ko devices=259:0'
 ExecStartPost=/bin/sh -c 'echo 0 > /sys/class/leds/tpacpi::power/brightness; echo block-activity > /sys/class/leds/tpacpi::power/trigger'
+ExecStop=/sbin/rmmod block_led_trigger
+ExecStopPost=/bin/sh -c 'echo 1 > /sys/class/leds/tpacpi::power/brightness'
 Type=oneshot
 RemainAfterExit=true
 
