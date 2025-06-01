@@ -1,7 +1,8 @@
 # block-led-trigger
 Linux kernel module to blink LEDs on block device activity
 
-**Note from theodric 2024-12-30:**  
+2025-06-01 - touched up the makefile because it wasn't working after I upgraded to kernel 6.15, shrug, works now
+ 
 ----------
 Very small modifications made to correct a type mismatch and handle NVMe MAJ:MIN device numbers.  
 Confirmed working on openSUSE Tumbleweed and [my spin of kernel 6.12.7](https://github.com/theodric/linux-amd-zen1-zen2-zen3-openSUSE_TW) running on a ThinkPad E14 gen2
