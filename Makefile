@@ -9,8 +9,7 @@ PWD   := $(shell pwd)
 # hardcode it  in our module. Another approach could have been to just query
 # the symbol table at runtime, but that would not give us the benefits of type
 # checking.
-# Hardcoded address for __tracepoint_block_rq_issue from kernel 6.15.0-zen4-minconfig
-ccflags-y += -D__tracepoint_block_rq_issue_address=0xffffffff926b97e0
+EXTRA_CFLAGS += $(shell grep __tracepoint_block_rq_issue /proc/kallsyms | sed 's/\([^ ]*\).*/-D__tracepoint_block_rq_issue_address=0x\1/')
 
 .PHONY: default clean
 
