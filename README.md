@@ -1,7 +1,7 @@
 # block-led-trigger
 Linux kernel module to blink LEDs on block device activity 
 
-Alright, this broke on kernel 6.15. I gave up trying to make the tracepoints hack work. This was developed under kernel 6.16-rc1.
+Alright, this broke on kernel 6.15. I gave up trying to make the tracepoints hack work. This was developed under kernel 6.16-rc1, but has also been tested on 6.14.10.
 
 This represents a total rework-- arguably both better (or at least less hacky) and worse.
 * Less responsive by an order of magnitude (but still millisecond-level response)
