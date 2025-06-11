@@ -1,5 +1,16 @@
 # block-led-trigger
 Linux kernel module to blink LEDs on block device activity 
+
+Alright, this broke on kernel 6.15. I gave up trying to make the tracepoints hack work. This was developed under kernel 6.16-rc1.
+
+This represents a total rework-- arguably both better (or at least less hacky) and worse.
+* Less responsive by an order of magnitude (but still millisecond-level response)
+* No longer using tracepoints; checks /proc/diskstats instead
+* No kernel symbols requred, only procfs!
+* Has some parameters that can be set through sysfs, or at load time, in case you want to mess with timing
+
+The original branch has been abandoned! No further development unless I get a major bug up my ass.
+
 ----------
 Very small modifications made to correct a type mismatch and handle NVMe MAJ:MIN device numbers.  
 Confirmed working on openSUSE Tumbleweed and [my spin of kernel 6.12.7](https://github.com/theodric/linux-amd-zen1-zen2-zen3-openSUSE_TW) running on a ThinkPad E14 gen2
