@@ -1,0 +1,131 @@
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/kallsyms.h>
+#include <linux/kernel.h>
+#include <linux/leds.h>
+#include <linux/module.h>
+#include <linux/stringify.h>
+#include <linux/tracepoint.h>
+#include <linux/uaccess.h>
+#include <linux/slab.h>
+#include <trace/events/block.h>
+
+#define MAX_DEVICES     16
+
+DEFINE_LED_TRIGGER(ledtrig_block);
+
+static bool invert_brightness = false;
+module_param(invert_brightness, bool, S_IRUGO | S_IWUSR);
+
+static unsigned long blink_delay_ms = 30;
+module_param(blink_delay_ms, ulong, S_IRUGO | S_IWUSR);
+
+static unsigned int device_count = 1;
+static dev_t device_dev[MAX_DEVICES];
+static char *device_devstr[MAX_DEVICES] = { "259:0" };
+module_param_array_named(devices, device_devstr, charp, &device_count, 0);
+
+static struct tracepoint *tp_block_rq_issue = NULL;
+
+static void trace_rq_issue(void *ignore, struct request *rq)
+{
+        bool device_matched = false;
+        int i;
+
+        if (!rq || !rq->q || !rq->q->disk)
+                return;
+
+        for (i = 0; i < device_count && !device_matched; i++) {
+                if (MKDEV(MAJOR(device_dev[i]), MINOR(device_dev[i])) ==
+                    MKDEV(rq->q->disk->major, rq->q->disk->first_minor))
+                        device_matched = true;
+        }
+
+        if (!device_matched)
+                return;
+
+        led_trigger_blink_oneshot(ledtrig_block,
+                                  blink_delay_ms,
+                                  blink_delay_ms,
+                                  invert_brightness);
+}
+
+static unsigned long find_symbol_address(const char *name)
+{
+        struct file *f;
+        loff_t pos = 0;
+        char *buf;
+        ssize_t len;
+        unsigned long addr = 0;
+
+        buf = kmalloc(512, GFP_KERNEL);
+        if (!buf)
+                return 0;
+
+        f = filp_open("/proc/kallsyms", O_RDONLY, 0);
+        if (IS_ERR(f)) {
+                kfree(buf);
+                return 0;
+        }
+
+        while ((len = kernel_read(f, buf, 511, &pos)) > 0) {
+                buf[len] = '\0';
+
+                if (strstr(buf, name)) {
+                        sscanf(buf, "%lx", &addr);
+                        break;
+                }
+        }
+
+        filp_close(f, NULL);
+        kfree(buf);
+        return addr;
+}
+
+static int __init block_led_trigger_init(void)
+{
+        int ret, i;
+        unsigned long sym_addr;
+
+        pr_info("block_led_trigger: loading\n");
+
+        sym_addr = find_symbol_address("__tracepoint_block_rq_issue");
+        if (!sym_addr) {
+                pr_err("block_led_trigger: tracepoint symbol not found\n");
+                return -ENOENT;
+        }
+
+        tp_block_rq_issue = (struct tracepoint *)sym_addr;
+
+        ret = tracepoint_probe_register(tp_block_rq_issue, (void *)trace_rq_issue, NULL);
+        if (ret) {
+                pr_err("block_led_trigger: failed to register tracepoint\n");
+                return ret;
+        }
+
+        for (i = 0; i < device_count; i++) {
+                unsigned int major, minor;
+                int end = sscanf(device_devstr[i], "%u:%u", &major, &minor);
+                if (end == 2)
+                        device_dev[i] = MKDEV(major, minor);
+                else
+                        pr_warn("block_led_trigger: invalid device format: %s\n", device_devstr[i]);
+        }
+
+        return 0;
+}
+
+static void __exit block_led_trigger_exit(void)
+{
+        if (tp_block_rq_issue)
+                tracepoint_probe_unregister(tp_block_rq_issue, (void *)trace_rq_issue, NULL);
+
+        pr_info("block_led_trigger: unloaded\n");
+}
+
+module_init(block_led_trigger_init);
+module_exit(block_led_trigger_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("your_mom");
+MODULE_DESCRIPTION("LED trigger for block IO via block_rq_issue tracepoint");

@@ -55,11 +55,10 @@ static void trigger_led_blink(void)
 	}
 }
 
-// Hook into the block layer by monitoring /proc/diskstats and /proc/vmstat
+// Hook into the block layer by monitoring /proc/diskstats
 static struct workqueue_struct *activity_wq;
 static struct delayed_work activity_work;
 static unsigned long last_total_ios = 0;
-static unsigned long last_dirty_pages = 0;
 
 static void check_disk_activity(struct work_struct *work)
 {
@@ -70,11 +69,9 @@ static void check_disk_activity(struct work_struct *work)
 	unsigned long current_total_ios = 0;
 	unsigned long total_reads = 0;
 	unsigned long total_writes = 0;
-	unsigned long current_dirty_pages = 0;
 	int disk_count = 0;
-	bool activity_detected = false;
 	
-	// Read /proc/diskstats to check for actual disk I/O
+	// Read /proc/diskstats to check for disk activity
 	f = filp_open("/proc/diskstats", O_RDONLY, 0);
 	if (!IS_ERR(f)) {
 		len = kernel_read(f, buf, sizeof(buf) - 1, &pos);
@@ -115,55 +112,17 @@ static void check_disk_activity(struct work_struct *work)
 		filp_close(f, NULL);
 	}
 	
-	// Read /proc/vmstat to check for dirty pages (buffered writes)
-	f = filp_open("/proc/vmstat", O_RDONLY, 0);
-	if (!IS_ERR(f)) {
-		pos = 0;
-		len = kernel_read(f, buf, sizeof(buf) - 1, &pos);
-		if (len > 0) {
-			buf[len] = '\0';
-			
-			// Look for "nr_dirty" line
-			char *start = buf;
-			char *end;
-			
-			while ((end = strchr(start, '\n')) != NULL) {
-				*end = '\0';
-				
-				if (strncmp(start, "nr_dirty", 8) == 0) {
-					sscanf(start, "nr_dirty %lu", &current_dirty_pages);
-					if (debug_mode) {
-						pr_info("block_led_trigger: Dirty pages: %lu\n", current_dirty_pages);
-					}
-					break;
-				}
-				
-				start = end + 1;
-			}
-		}
-		filp_close(f, NULL);
-	}
-	
-	// Trigger LED if I/O counters increased OR if dirty pages increased (buffered writes)
-	if ((current_total_ios > last_total_ios && last_total_ios != 0) ||
-	    (current_dirty_pages > last_dirty_pages && last_dirty_pages != 0)) {
+	// Only trigger LED if I/O counters have increased (actual new activity)
+	if (current_total_ios > last_total_ios && last_total_ios != 0) {
 		unsigned long new_ios = current_total_ios - last_total_ios;
-		unsigned long new_dirty = current_dirty_pages - last_dirty_pages;
-		
 		if (debug_mode) {
-			if (current_total_ios > last_total_ios) {
-				pr_info("block_led_trigger: Disk I/O detected! +%lu operations (reads=%lu, writes=%lu, disks=%d)\n", 
-				        new_ios, total_reads, total_writes, disk_count);
-			}
-			if (current_dirty_pages > last_dirty_pages) {
-				pr_info("block_led_trigger: Buffered writes detected! +%lu dirty pages\n", new_dirty);
-			}
+			pr_info("block_led_trigger: I/O detected! +%lu operations (reads=%lu, writes=%lu, disks=%d)\n", 
+			        new_ios, total_reads, total_writes, disk_count);
 		}
 		trigger_led_blink();
 	}
 	
 	last_total_ios = current_total_ios;
-	last_dirty_pages = current_dirty_pages;
 	
 	// Requeue the work to check again
 	queue_delayed_work(activity_wq, &activity_work, msecs_to_jiffies(check_interval_ms));

@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: GPL-2.0
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/leds.h>
+
+static bool invert_brightness;
+module_param(invert_brightness, bool, 0444);
+MODULE_PARM_DESC(invert_brightness, "Invert LED brightness");
+
+static unsigned long blink_delay_ms = 10;
+module_param(blink_delay_ms, ulong, 0644);
+MODULE_PARM_DESC(blink_delay_ms, "Duration of LED blink in milliseconds");
+
+static char *devices[8];
+static int device_count;
+module_param_array(devices, charp, &device_count, 0444);
+MODULE_PARM_DESC(devices, "Block devices to monitor (e.g., sda,sdb)");
+
+DEFINE_LED_TRIGGER(ledtrig_block);
+
+static int __init block_led_trigger_init(void)
+{
+	pr_info("block_led_trigger: loading\n");
+
+	// Register the LED trigger
+	led_trigger_register_simple("block-activity", &ledtrig_block);
+	
+	// Set initial LED state
+	led_trigger_event(ledtrig_block, invert_brightness ? LED_FULL : LED_OFF);
+
+	pr_info("block_led_trigger loaded successfully!\n");
+	pr_info("Use: echo block-activity > /sys/class/leds/YOUR_LED/trigger\n");
+	return 0;
+}
+
+static void __exit block_led_trigger_exit(void)
+{
+	led_trigger_unregister_simple(ledtrig_block);
+	pr_info("block_led_trigger: unloaded\n");
+}
+
+module_init(block_led_trigger_init);
+module_exit(block_led_trigger_exit);
+
+MODULE_AUTHOR("your_mom");
+MODULE_DESCRIPTION("Simple LED trigger for block activity");
+MODULE_LICENSE("GPL");
