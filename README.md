@@ -6,13 +6,20 @@ You can choose between the kernel module (which has kernel privileges) and the u
 Both do essentially the same thing: watch /proc/diskstats and toggle a given LED in response to activity.
 
 ## userspace-binary:
-BUILDING:
-`make`
+BUILD:
+`make  
+make install`
 
-running
-`# ./disk_led_monitor 
+RUN:
+`./disk_led_monitor` 
 
-ERROR:
+INSTALLTION:
+`make install` drops the binary in /usr/local/bin  
+You will need to specify the disk to monitor and the LED to flash at binary runtime as shown in the built-in hints.
+For systemd distros, copy the provided systemd unit file to /etc/systemd/system, modify it to suit your particular disk and LED, then run `systemctl daemon-reload;systemctl install disk-led-monitor.service`  
+If you're on a based/trad distro, I'll assume you can write your own init script.  
+
+`ERROR:
 You must specify both the disk to monitor and the path to the LED to control
 Browse /sys/class/leds for available LEDs to control.
 
@@ -26,6 +33,7 @@ Usage: ./disk_led_monitor -d <disk> -l <led> [-v]
 Examples:
   ./disk_led_monitor -d sda -l led0
   ./disk_led_monitor -d nvme0n1 -l input0::capslock -v`
+
 
 
 ## kernel-module
