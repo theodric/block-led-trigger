@@ -21,7 +21,8 @@ If you're on a based/trad distro, I'll assume you can write your own init script
 
 
 SAMPLE PROGRAM RUN:
-```ERROR:
+```
+ERROR:
 You must specify both the disk to monitor and the path to the LED to control
 Browse /sys/class/leds for available LEDs to control.
 
@@ -34,8 +35,8 @@ Usage: ./disk_led_monitor -d <disk> -l <led> [-v]
 
 Examples:
   ./disk_led_monitor -d sda -l led0
-  ./disk_led_monitor -d nvme0n1 -l input0::capslock -v```
-
+  ./disk_led_monitor -d nvme0n1 -l input0::capslock -v
+```
 
 ## kernel-module
 Linux kernel module to blink LEDs on block device activity 
