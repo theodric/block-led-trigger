@@ -1,0 +1,23 @@
+[Unit]
+Description=Disk LED Monitor Service
+After=syslog.target
+Wants=syslog.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/disk_led_monitor -d sda -l led0
+Restart=always
+RestartSec=5
+User=root
+Group=root
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/sys/class/leds
+
+[Install]
+WantedBy=multi-user.target 

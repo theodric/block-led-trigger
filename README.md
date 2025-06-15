@@ -1,4 +1,34 @@
 # block-led-trigger
+There's more than one way to flash an LED!  
+
+You can choose between the kernel module (which has kernel privileges) and the userspace binary (which must be run as root). Up to you, but I'd probably go for the userspace binary.
+
+Both do essentially the same thing: watch /proc/diskstats and toggle a given LED in response to activity.
+
+## userspace-binary:
+BUILDING:
+`make`
+
+running
+`# ./disk_led_monitor 
+
+ERROR:
+You must specify both the disk to monitor and the path to the LED to control
+Browse /sys/class/leds for available LEDs to control.
+
+Note that this program must be run with elevated privileges to change LED state!
+
+Usage: ./disk_led_monitor -d <disk> -l <led> [-v]
+  -d <disk>    Disk to monitor (e.g., sda, nvme0n1)
+  -l <led>     LED to control (e.g., led0, input0::capslock)
+  -v           Enable verbose/debug output
+
+Examples:
+  ./disk_led_monitor -d sda -l led0
+  ./disk_led_monitor -d nvme0n1 -l input0::capslock -v`
+
+
+## kernel-module
 Linux kernel module to blink LEDs on block device activity 
 
 Alright, this broke on kernel 6.15. I gave up trying to make the tracepoints hack work. This was developed under kernel 6.16-rc1, but has also been tested on 6.14.10.
