@@ -19,7 +19,9 @@ You will need to specify the disk to monitor and the LED to flash at binary runt
 For systemd distros, copy the provided systemd unit file to /etc/systemd/system, modify it to suit your particular disk and LED, then run `systemctl daemon-reload;systemctl install disk-led-monitor.service`  
 If you're on a based/trad distro, I'll assume you can write your own init script.  
 
-`ERROR:
+
+SAMPLE PROGRAM RUN:
+```ERROR:
 You must specify both the disk to monitor and the path to the LED to control
 Browse /sys/class/leds for available LEDs to control.
 
@@ -32,8 +34,7 @@ Usage: ./disk_led_monitor -d <disk> -l <led> [-v]
 
 Examples:
   ./disk_led_monitor -d sda -l led0
-  ./disk_led_monitor -d nvme0n1 -l input0::capslock -v`
-
+  ./disk_led_monitor -d nvme0n1 -l input0::capslock -v```
 
 
 ## kernel-module
